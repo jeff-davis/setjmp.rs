@@ -14,7 +14,11 @@
 
 use libc::*;
 
-include!(concat!(env!("OUT_DIR"), "/jmpbuf.rs"));
+mod sys {
+    include!(concat!(env!("OUT_DIR"), "/jmpbuf.rs"));
+}
+
+pub use crate::sys::{jmp_buf, sigjmp_buf};
 
 extern "C" {
     #[link_name="setjmp"]
