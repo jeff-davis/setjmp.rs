@@ -19,10 +19,65 @@ for details and caveats.
 
 Also see [RFC #2625](https://github.com/rust-lang/rfcs/issues/2625).
 
+# Motivation
+
+To interact better with C code that may use
+``setjmp()``/``longjmp()``:
+
+* If C code calls rust code, and the rust code calls C code, and a
+  ``longjmp()`` happens, you may want the rust code to catch, the
+  ``longjmp()``, transform it into a panic (to safely unwind), then
+  [``catch_unwind()``](https://doc.rust-lang.org/std/panic/fn.catch_unwind.html),
+  then turn it back into a ``longjmp()`` to return to someplace in the
+  C code (the last place that called ``setjmp()``).
+* If rust code calls C code, the rust code might want to catch a
+  ``longjmp()`` from the C code and handle it somehow.
+* Rust code might want to ``longjmp()`` to return control to C code.
+* Use coroutines where one of the functions is implemented in C and
+  the other in rust.
+
+It is possible to use ``setjmp()``/``longjmp()`` just for managing
+control flow in rust (without interacting with C), but that would be
+quite dangerous and has no clear use case.
+
+# Why is the "setjmp" crate necessary?
+
+Ordinarily, using a C function from rust is easy: you just declare
+it. Why go to the trouble of making a special crate?
+
+1. Document the numerous problems and caveats, as done in this
+   document.
+1. Explore the problem space enough that the rust language team might
+   feel comfortable defining the behavior (in at least some narrow
+   circumstances).
+1. Provide tests to see if something breaks in an obvious way.
+1. Handle some platform issues:
+   1. The ``jmp_buf`` and ``sigjmp_buf`` types are not trivial and are
+      best defined using bindgen on the system's ``<setjmp.h>``
+      header.
+   1. libc implementations often use macros to change the symbols
+      actually referenced; and this is done differently on different
+      platforms. For instance, instead of ``sigsetjmp`` the actual
+      libc symbol might be ``__sigsetjmp``, and there may be a macro
+      to rewrite the ``sigsetjmp()`` call into ``__sigsetjmp()``.
+
+# Usage
+
+The invocation of setjmp can appear only in the following contexts
+(see
+[this](https://github.com/rust-lang/rfcs/issues/2625#issuecomment-455896576)
+comment):
+
+* the entire controlling expression of ``match``, e.g. ``match setjmp(env) { ... }``.
+* ``if setjmp(env) $integer_relational_operator $integer_constant_expression { ... }``
+* the entire expression of an expression statement: ``setjmp(env);``
+
+See tests for examples.
+
 # Problems
 
-Beyond the many caveats and challenges using ``setjmp/longjmp`` in C,
-there are **additional** challenges using them from rust.
+Beyond the many challenges using ``setjmp/longjmp`` in C, there are
+**additional** challenges using them from rust.
 
 1. The behavior of these functions is defined in terms of C, and
    therefore any application to rust is by analogy (until rust defines
@@ -38,55 +93,31 @@ there are **additional** challenges using them from rust.
    [``returns_twice``](https://llvm.org/docs/LangRef.html#function-attributes)
    attribute; but rust has no way to propagate that attribute to
    LLVM. Without this attribute, it's possible that LLVM itself will
-   generate incorrect code.
+   generate incorrect code (See
+   [this](https://github.com/rust-lang/rfcs/issues/2625#issuecomment-460849462)
+   comment).
+1. Jumping can interrupt well-bracketed control flow, circumventing
+   guarantees about what code has run.
+1. Jumping can return control to a point before a value was moved,
+   thereby allowing use-after-drop bugs.
+1. Jumping deallocates variables without destructing them (it doesn't
+   merely leak them).
 
-# Motivation
+# Alternatives
 
-With so many problems, why is it worth dealing with
-``setjmp``/``longjmp``? Because it's sometimes important when
-interacting with existing C code or APIs.
+Given these problems, you should seriously consider alternatives.
 
-* If C code calls rust code, and the rust code calls C code, and a
-  ``longjmp()`` happens, you may want the rust code to catch, the
-  ``longjmp()``, transform it into a panic (to safely unwind), then
-  [``catch_unwind()``](https://doc.rust-lang.org/std/panic/fn.catch_unwind.html),
-  then turn it back into a ``longjmp()`` to return to someplace in the
-  C code (the last place that called ``setjmp()``).
-* If rust code calls C code, the rust code might want to catch a
-  ``longjmp()`` from the C code and handle it somehow.
-* Rust code might want to ``longjmp()`` to return control to C code.
-
-If the caveats so far haven't scared you away, and you'd like to get
-even more dangerous, you could also:
-
-* Use coroutines where one of the functions is implemented in C and
-  the other in rust.
-* Use ``setjmp()``/``longjmp()`` just as a control flow mechanism in
-  rust, without C being involved.
-
-# Why is the "setjmp" crate necessary?
-
-Ordinarily, using a C function from rust is easy: you just declare
-it. Why go to the trouble of making a special crate?
-
-1. Document the problems and caveats, as done in this document.
-1. Explore the problem space enough that the rust language team might
-   feel comfortable defining the behavior (in at least some narrow
-   circumstances).
-1. Provide tests to see if something breaks in an obvious way.
-1. Handle some platform issues:
-   1. The ``jmp_buf`` and ``sigjmp_buf`` types are not trivial and are
-      best defined using bindgen on the system's ``<setjmp.h>``
-      header.
-   1. libc implementations often use macros to change the symbols
-      actually referenced; and this is done differently on different
-      platforms. For instance, instead of ``sigsetjmp`` the actual
-      libc symbol might be ``__sigsetjmp``, and there may be a macro
-      to rewrite the ``sigsetjmp()`` call into ``__sigsetjmp()``.
+One alternative is to use C wrappers when entering a rust stack frame
+from C or a C stack frame from rust. The wrappers could turn special
+return values from rust into a C ``longjmp()`` if necessary, or catch
+a ``longjmp()`` from C and turn it into a rust ``panic!()``,
+respectively. This is not always practical, however, so sometimes
+calling ``setjmp()``/``longjmp()`` from rust is still the best
+solution.
 
 # Recommendations
 
-* Mark any function calling ``setjmp()`` with ``#[no_inline]`` to
+* Mark any function calling ``setjmp()`` with ``#[inline(never)]`` to
   reduce the chances for misoptimizations.
 * Code between a ``setjmp()`` returns ``0`` and possible ``longjmp()``
   should be as minimal as possible. Typically, this might just be
