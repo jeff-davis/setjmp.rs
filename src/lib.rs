@@ -1,5 +1,5 @@
 //!
-//! Expose C standard library functions in <setjmp.h> to rust.
+//! Expose C standard library functions in ``<setjmp.h>`` to rust.
 //!
 //! **WARNING: this crate is experimental and even careful use is
 //! likely undefined behavior.**
