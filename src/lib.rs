@@ -1,18 +1,10 @@
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
 use libc::*;
 
-#[repr(C)]
-pub struct jmp_buf {
-    __jmpbuf: [i64; 8],
-    __mask_was_saved: c_int,
-    __saved_mask: sigset_t,
-}
-
-#[repr(C)]
-pub struct sigjmp_buf {
-    __jmpbuf: [i64; 9],
-    __mask_was_saved: c_int,
-    __saved_mask: sigset_t,
-}
+include!(concat!(env!("OUT_DIR"), "/jmpbuf.rs"));
 
 extern "C" {
     #[link_name="setjmp"]

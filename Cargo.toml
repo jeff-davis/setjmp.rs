@@ -1,6 +1,6 @@
 [package]
 name = "setjmp"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jeff Davis <jeff@j-davis.com>"]
 edition = "2018"
 license = "PostgreSQL OR MIT"
@@ -10,3 +10,6 @@ documentation = "https://docs.rs/setjmp"
 
 [dependencies]
 libc = "^0.2"
+
+[build-dependencies]
+bindgen = "^0.53"
