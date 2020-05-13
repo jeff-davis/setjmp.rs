@@ -23,4 +23,7 @@ mod sys {
     include!(concat!(env!("OUT_DIR"), "/decls.rs"));
 }
 
+#[cfg(test)]
+mod tests;
+
 pub use crate::sys::{jmp_buf, longjmp, setjmp, sigjmp_buf, siglongjmp, sigsetjmp};
