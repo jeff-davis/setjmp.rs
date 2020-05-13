@@ -1,6 +1,6 @@
 [package]
 name = "setjmp"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Jeff Davis <jeff@j-davis.com>"]
 edition = "2018"
 license = "PostgreSQL OR MIT"
