@@ -5,7 +5,7 @@
 //! likely undefined behavior.**
 //!
 //! See
-//! [setjmp(3)](https://manpages.debian.org/unstable/manpages-dev/setjmp.3.en.html)
+//! [setjmp(3)](http://man7.org/linux/man-pages/man3/setjmp.3.html)
 //! and [RFC #2625](https://github.com/rust-lang/rfcs/issues/2625).
 
 #![allow(non_upper_case_globals)]

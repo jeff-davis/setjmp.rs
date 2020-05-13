@@ -14,7 +14,7 @@ pub fn siglongjmp(env: *mut sigjmp_buf, val: c_int) -> c_void;
 as well as the ``jmp_buf`` and ``sigjmp_buf`` types needed to use them.
 
 See
-[``setjmp(3)``](https://manpages.debian.org/unstable/manpages-dev/setjmp.3.en.html)
+[``setjmp(3)``](http://man7.org/linux/man-pages/man3/setjmp.3.html)
 for details and caveats.
 
 Also see [RFC #2625](https://github.com/rust-lang/rfcs/issues/2625).
@@ -33,8 +33,6 @@ To interact better with C code that may use
 * If rust code calls C code, the rust code might want to catch a
   ``longjmp()`` from the C code and handle it somehow.
 * Rust code might want to ``longjmp()`` to return control to C code.
-* Use coroutines where one of the functions is implemented in C and
-  the other in rust.
 
 It is possible to use ``setjmp()``/``longjmp()`` just for managing
 control flow in rust (without interacting with C), but that would be
