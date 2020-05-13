@@ -4,7 +4,7 @@ extern crate libc;
 
 use std::env;
 use std::ffi::{CStr, CString};
-use std::fs::{File, remove_file};
+use std::fs::{remove_file, File};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -119,7 +119,9 @@ int find_symbols()
     longjmp(jmpbuf, 1);
     siglongjmp(sigjmpbuf, 1);
 }
-"###.as_bytes().to_vec();
+"###
+    .as_bytes()
+    .to_vec();
 }
 
 // The contents of the function declarations for setjmp, etc. The
@@ -140,5 +142,7 @@ extern "C" {{
 }}
 "###,
         symbols[0], symbols[1], symbols[2], symbols[3]
-    ).as_bytes().to_vec();
+    )
+    .as_bytes()
+    .to_vec();
 }
