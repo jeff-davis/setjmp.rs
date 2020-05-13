@@ -15,7 +15,11 @@
 mod sys {
     use libc::*;
 
+    // definitions for jmp_buf and sigjmp_buf types
     include!(concat!(env!("OUT_DIR"), "/jmpbuf.rs"));
+
+    // declarations for setjmp, sigsetjmp, longjmp, and siglongjmp
+    // including proper link name attributes for this platform's libc
     include!(concat!(env!("OUT_DIR"), "/decls.rs"));
 }
 
