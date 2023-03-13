@@ -1,6 +1,6 @@
 [package]
 name = "setjmp"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Jeff Davis <jeff@j-davis.com>"]
 edition = "2018"
 license = "PostgreSQL OR MIT"
@@ -12,6 +12,6 @@ documentation = "https://docs.rs/setjmp"
 libc = "^0.2"
 
 [build-dependencies]
-bindgen = "^0.53"
-clang-sys = { version = "0.29", features = ["clang_6_0"] }
+bindgen = "^0.64"
+clang-sys = { version = "1.6", features = ["clang_6_0"] }
 libc = "^0.2"

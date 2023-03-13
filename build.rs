@@ -21,8 +21,8 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")
         // we only want these two type definitions
-        .whitelist_type("jmp_buf")
-        .whitelist_type("sigjmp_buf")
+        .allowlist_type("jmp_buf")
+        .allowlist_type("sigjmp_buf")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate bindings");
